@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.activity.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,12 +20,12 @@ class MainActivity : AppCompatActivity() {
      * viewModel 사용방법
      * 1) build.gradle dependencies implement 추가
      */
-    private val model : ListViewModel by viewModels()
+    //private val model : ListViewModel by viewModels()
 
     /**
      * 2) lateinit var 사용
      */
-    //private lateinit var model : ListViewModel
+    private lateinit var model : ListViewModel
 
     private val songAdaptor = SongAdapter()
 
@@ -37,7 +36,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-//        model = ViewModelProvider(this)[ListViewModel::class.java]
+        model = ViewModelProvider(this)[ListViewModel::class.java]
 
         //어떤 방식으로 recyclerView가 동작하는지 설정해줘야함
 
@@ -53,8 +52,9 @@ class MainActivity : AppCompatActivity() {
             adapter = songAdaptor
         }
 
-        model.getList().observe(this) {
-            songAdaptor.notifyDataSetChanged() //warning 발생, 데이터가 바뀌면 뭐가 바뀐지는 모르기 때문에 아예 reset 시키고 전부 다 다시 보여주니까 비효율적임
+        model.list.observe(this) {
+            //songAdaptor.notifyDataSetChanged() //warning 발생, 데이터가 바뀌면 뭐가 바뀐지는 모르기 때문에 아예 reset 시키고 전부 다 다시 보여주니까 비효율적임
+            songAdaptor.notifyItemMoved(0, model.list.value?.size ?: 0) //nullable인지 체크 해줘야 함, elvis 연산자 사용
         }
 
         for (i in 1..3) {
@@ -80,9 +80,9 @@ class MainActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             TODO("텍스트뷰 값을 세팅하도록 함 - vh가 텍스트뷰 가짐")
-            holder.txSong.text = model.getSong(position)
+            holder.txSong.text = model.list.value?.get(position) ?: "" //model.list.value[position] 이 제일 깔끔하지만 value가 nullable이기 때문에 이렇게 사용할 수 없음
         }
 
-        override fun getItemCount() = model.getSize()
+        override fun getItemCount() = model.list.value?.size ?: 0
     }
 }
